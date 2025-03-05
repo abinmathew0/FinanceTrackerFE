@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = "https://myproj-backend-appabc12346.azurewebsites.net/api";
 
 const AddTransaction = () => {
   const [formData, setFormData] = useState({

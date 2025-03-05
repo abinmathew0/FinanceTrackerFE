@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_URL = process.env.REACT_APP_API_URL; // ✅ Fetch API URL from .env
+const API_URL = "https://myproj-backend-appabc12346.azurewebsites.net/api"; // ✅ Fetch API URL from .env
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
