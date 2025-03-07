@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Transactions from "./pages/Transactions";
 import AddTransaction from "./pages/AddTransaction";
 import Dashboard from "./pages/Dashboard"; // ✅ Import Dashboard
+import Stats from "./pages/Stats"; // ✅ Import Stats
 
 const isAuthenticated = () => !!localStorage.getItem("token"); // ✅ Check if token exists
 
@@ -17,11 +18,9 @@ const ProtectedRoute = ({ element }) => {
 const App = () => {
   return (
     <div className="d-flex flex-column min-vh-100">
-      {" "}
       {/* ✅ Ensure full-height layout */}
       <Navbar />
       <div className="flex-grow-1">
-        {" "}
         {/* ✅ Allows content to expand */}
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -33,8 +32,11 @@ const App = () => {
           <Route
             path="/dashboard"
             element={<ProtectedRoute element={<Dashboard />} />}
-          />{" "}
-          {/* ✅ Added Dashboard */}
+          />
+          <Route
+            path="/stats"
+            element={<ProtectedRoute element={<Stats />} />}
+          />
           <Route
             path="/add-transaction"
             element={<ProtectedRoute element={<AddTransaction />} />}

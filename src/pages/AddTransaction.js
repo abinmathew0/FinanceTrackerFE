@@ -1,39 +1,43 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
-const API_URL = "https://myproj-backend-appabc12346.azurewebsites.net/api";
+const API_URL = process.env.REACT_APP_API_URL;
 
 const AddTransaction = () => {
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
-    type: "income",
+    type: "expense",
     category: "",
   });
+  const navigate = useNavigate();
 
   const incomeCategories = [
-    "Salary",
-    "Business Profits",
-    "Freelancing",
-    "Investments",
-    "Interest",
+    "Salary/Wages",
+    "Business Income",
+    "Investments & Dividends",
     "Rental Income",
-    "Dividends",
-    "Other Income",
+    "Capital Gains",
+    "Pension & Social Security",
+    "Bonuses & Commissions",
+    "Side Hustles & Gig Work",
   ];
 
   const expenseCategories = [
-    "Food & Dining",
-    "Groceries",
-    "Transportation",
+    "Rent/Mortgage",
     "Utilities",
-    "Healthcare",
+    "Groceries",
+    "Dining Out",
+    "Transportation",
+    "Insurance",
+    "Loan Payments",
     "Entertainment",
+    "Healthcare & Medications",
+    "Subscriptions",
     "Shopping",
     "Travel",
-    "Insurance",
-    "Debt Payments",
-    "Other Expenses",
+    "Gifts",
   ];
 
   const handleChange = (e) => {
@@ -86,7 +90,7 @@ const AddTransaction = () => {
           <option value="expense">Expense</option>
         </select>
 
-        {/* 🔹 Show categories dynamically based on type selection */}
+        {/* Show categories dynamically based on type selection */}
         <select
           className="form-control my-2"
           name="category"
@@ -103,20 +107,8 @@ const AddTransaction = () => {
               {category}
             </option>
           ))}
-          <option value="custom">Other (Enter manually)</option>
+          <option value="Other">Other</option>
         </select>
-
-        {/* 🔹 Show input field for custom category if "Other" is selected */}
-        {formData.category === "custom" && (
-          <input
-            className="form-control my-2"
-            type="text"
-            name="category"
-            placeholder="Enter Custom Category"
-            onChange={handleChange}
-            required
-          />
-        )}
 
         <button className="btn btn-success w-100">Add Transaction</button>
       </form>

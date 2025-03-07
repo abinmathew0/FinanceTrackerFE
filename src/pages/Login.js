@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const API_URL = "https://myproj-backend-appabc12346.azurewebsites.net/api";
+const API_URL = process.env.REACT_APP_API_URL;
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -18,22 +19,20 @@ const Login = () => {
     try {
       const res = await axios.post(`${API_URL}/auth/login`, credentials);
       localStorage.setItem("token", res.data.token);
-      window.location.href = "/";
+      // Dispatch custom event to update Navbar immediately
+      window.dispatchEvent(new Event("userLoggedIn"));
+      navigate("/"); // Redirect to home after login
     } catch (err) {
       console.error("Login failed", err);
-      if (err.response && err.response.status === 400) {
-        setError("Invalid email or password. Please try again.");
-      } else {
-        setError("Server error. Please try again later.");
-      }
+      setError("Invalid email or password. Please try again.");
     }
   };
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4"
-      style={{ marginTop: "9rem" }}
-      >Welcome to Finance Tracker Login to continue.</h2>
+      <h2 className="text-center mb-4" style={{ marginTop: "9rem" }}>
+        Welcome to Finance Tracker. Login to continue.
+      </h2>
       {error && <p className="alert alert-danger text-center">{error}</p>}
 
       <form onSubmit={handleSubmit} className="w-50 mx-auto">

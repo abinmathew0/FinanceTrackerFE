@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Modal from "react-modal"; // ✅ Import react-modal for success message
 
-const API_URL = "https://myproj-backend-appabc12346.azurewebsites.net/api";
-
-console.log("API Base URL:", API_URL);
+const API_URL = process.env.REACT_APP_API_URL;
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,32 +11,37 @@ const Register = () => {
     email: "",
     password: "",
   });
-
   const [error, setError] = useState("");
+  const [successModalIsOpen, setSuccessModalIsOpen] = useState(false); // ✅ Manage modal state
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, formData);
-      alert(res.data.message);
-      navigate("/login");
+      await axios.post(`${API_URL}/auth/register`, formData);
+      setSuccessModalIsOpen(true); // ✅ Open success modal
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError("Registration failed. Please try again.");
     }
+  };
+
+  const closeSuccessModal = () => {
+    setSuccessModalIsOpen(false);
+    navigate("/login"); // ✅ Redirect to login page after closing modal
   };
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4"
-      style={{ marginTop: "7rem" }}>Create an Account</h2>
+      <h2 className="text-center mb-4" style={{ marginTop: "7rem" }}>
+        Create an Account
+      </h2>
       {error && <p className="alert alert-danger">{error}</p>}
+
       <form onSubmit={handleSubmit} className="w-50 mx-auto">
         <input
           type="text"
@@ -65,6 +69,24 @@ const Register = () => {
         />
         <button className="btn btn-success w-100">Sign Up</button>
       </form>
+
+      {/* ✅ Success Modal */}
+      <Modal
+        isOpen={successModalIsOpen}
+        onRequestClose={closeSuccessModal}
+        className="modal-dialog"
+      >
+        <div className="modal-content p-4 text-center w-50 mx-auto">
+          <h4 className="text-success">🎉 Registration Successful!</h4>
+          <p>You have successfully created an account. You can now log in.</p>
+          <button
+            className="btn btn-primary w-50 mx-auto"
+            onClick={closeSuccessModal}
+          >
+            Go to Login
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
