@@ -7,6 +7,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 const Login = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -15,16 +16,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    setLoading(true);
     try {
       const res = await axios.post(`${API_URL}/auth/login`, credentials);
       localStorage.setItem("token", res.data.token);
       // Dispatch custom event to update Navbar immediately
       window.dispatchEvent(new Event("userLoggedIn"));
+      setLoading(false);
       navigate("/"); // Redirect to home after login
     } catch (err) {
       console.error("Login failed", err);
       setError("Invalid email or password. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -55,11 +58,31 @@ const Login = () => {
           onChange={handleChange}
           required
         />
-        <button className="btn btn-primary w-100">Login</button>
+        <button
+          className="btn btn-primary w-100"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
+        </button>
       </form>
 
       <p className="text-center mt-3">
         Don't have an account? <Link to="/register">Sign Up</Link>
+      </p>
+      <p className="text-center mt-2">
+        <Link to="/forgot-password">Forgot Password?</Link>
       </p>
     </div>
   );

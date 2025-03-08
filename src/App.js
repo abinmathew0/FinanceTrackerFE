@@ -1,15 +1,17 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer"; // ✅ Footer is still present
+import Footer from "./components/Footer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Transactions from "./pages/Transactions";
 import AddTransaction from "./pages/AddTransaction";
-import Dashboard from "./pages/Dashboard"; // ✅ Import Dashboard
-import Stats from "./pages/Stats"; // ✅ Import Stats
+import Dashboard from "./pages/Dashboard";
+import Stats from "./pages/Stats";
+// Import the ChangePassword component
+import ChangePassword from "./pages/ChangePassword";
 
-const isAuthenticated = () => !!localStorage.getItem("token"); // ✅ Check if token exists
+const isAuthenticated = () => !!localStorage.getItem("token");
 
 const ProtectedRoute = ({ element }) => {
   return isAuthenticated() ? element : <Navigate to="/login" replace />;
@@ -18,13 +20,12 @@ const ProtectedRoute = ({ element }) => {
 const App = () => {
   return (
     <div className="d-flex flex-column min-vh-100">
-      {/* ✅ Ensure full-height layout */}
       <Navbar />
       <div className="flex-grow-1">
-        {/* ✅ Allows content to expand */}
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {/* Protected Routes */}
           <Route
             path="/"
             element={<ProtectedRoute element={<Transactions />} />}
@@ -41,9 +42,13 @@ const App = () => {
             path="/add-transaction"
             element={<ProtectedRoute element={<AddTransaction />} />}
           />
+          <Route
+            path="/change-password"
+            element={<ProtectedRoute element={<ChangePassword />} />}
+          />
         </Routes>
       </div>
-      <Footer /> {/* ✅ Footer is now always visible */}
+      <Footer />
     </div>
   );
 };
