@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -11,7 +10,6 @@ const AddTransaction = () => {
     type: "expense",
     category: "",
   });
-  const navigate = useNavigate();
 
   const incomeCategories = [
     "Salary/Wages",

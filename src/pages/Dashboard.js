@@ -102,7 +102,6 @@ const Dashboard = () => {
   const expense = displayTransactions
     .filter((txn) => txn.type === "expense")
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
-  const netIncome = income - expense;
 
   const incomeExpenseBarData = {
     labels: ["Income", "Expense"],

@@ -42,7 +42,10 @@ const Register = () => {
       </h2>
       {error && <p className="alert alert-danger">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="w-50 mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="col-10 col-md-6 col-lg-4 mx-auto"
+      >
         <input
           type="text"
           className="form-control my-2"
