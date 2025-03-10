@@ -107,12 +107,12 @@ const Stats = () => {
     return { category: cat.value, spending, percentage };
   });
 
-  // New: Create a sorted array of categories with spending (nonzero) in descending order
+  // Sorted array of categories with spending (nonzero) in descending order
   const categoryPercentageBreakdown = categoryBreakdown
     .filter((item) => Number(item.spending) > 0)
     .sort((a, b) => Number(b.percentage) - Number(a.percentage));
 
-  // New: Compute average monthly spending for each expense category from all transactions (past 4-5 months data)
+  // Compute average monthly spending for each expense category from past data
   const averageMonthlySpendingByCategory = {};
   const monthlyData = {};
   transactions.forEach((txn) => {
@@ -142,7 +142,6 @@ const Stats = () => {
     return sum + (averageMonthlySpendingByCategory[cat.value] || 0);
   }, 0);
 
-
   // Budget vs. Actual: Check which categories are over their set limits
   const categoriesOverLimit = expenseCategories
     .filter((cat) => {
@@ -165,7 +164,6 @@ const Stats = () => {
         txn.type === "expense" && recurringCategories.includes(txn.category)
     )
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
-  //const nonRecurringExpense = totalExpense - recurringExpense;
 
   // Cash Flow Analysis & Savings Rate
   const savingsRate =
@@ -177,7 +175,6 @@ const Stats = () => {
   // Rolling Average (for expenses) for the last 7 days if in monthly view
   let rollingAvg = 0;
   if (view === "monthly") {
-    // Get today's date, then calculate expenses for the last 7 days
     const today = new Date();
     const past7Days = [];
     for (let i = 0; i < 7; i++) {
@@ -226,23 +223,15 @@ const Stats = () => {
       today.getMonth() + 1,
       0
     ).getDate();
-
-    // Assume fixed rent is from the "Rent/Mortgage" category.
     const fixedRent = spendingByCategory["Rent/Mortgage"] || 0;
-
-    // Calculate expense excluding rent.
     const expenseWithoutRent = totalExpense - fixedRent;
-
-    // If we're past the first day, compute average for days excluding day 1.
     if (currentDay > 1) {
       const dailyAvgWithoutRent = expenseWithoutRent / (currentDay - 1);
-      // Forecast = fixed rent + (average for remaining days * (total days minus 1))
       expenseForecast = (
         fixedRent +
         dailyAvgWithoutRent * (totalDaysInMonth - 1)
       ).toFixed(2);
     } else {
-      // On the first day, the only expense might be rent.
       expenseForecast = totalExpense.toFixed(2);
     }
   }
@@ -263,8 +252,6 @@ const Stats = () => {
 
   // Generate useful feedback messages based on the data
   const feedbackMessages = [];
-
-  // Overall Financial Health
   if (netIncome < 0) {
     feedbackMessages.push(
       "Your net income is negative. Consider reducing expenses or increasing income."
@@ -272,8 +259,6 @@ const Stats = () => {
   } else {
     feedbackMessages.push("You have a positive net income. Good job!");
   }
-
-  // Savings Rate
   if (totalIncome > 0 && savingsRate !== "N/A") {
     if (savingsRate < 20) {
       feedbackMessages.push(
@@ -283,15 +268,11 @@ const Stats = () => {
       feedbackMessages.push(`Your savings rate is healthy at ${savingsRate}%.`);
     }
   }
-
-  // Recurring vs. One-Time Expenses
   const recurringPct =
     totalExpense > 0 ? ((recurringExpense / totalExpense) * 100).toFixed(2) : 0;
   feedbackMessages.push(
     `Recurring expenses account for ${recurringPct}% of your total expenses.`
   );
-
-  // Variability & Consistency
   if (avgExpense > 0) {
     if (stdDeviation > avgExpense * 0.75) {
       feedbackMessages.push(
@@ -301,20 +282,14 @@ const Stats = () => {
       feedbackMessages.push("Your expense amounts are relatively consistent.");
     }
   }
-
-  // Forecasting
   if (view === "monthly") {
     feedbackMessages.push(
       `Based on your current spending, your forecasted expense for this month is $${expenseForecast}.`
     );
   }
-
-  // Transaction Frequency
   feedbackMessages.push(
     `You have made ${transactionCount} transactions in the selected period.`
   );
-
-  // Budget vs. Actual (per category)
   if (categoriesOverLimit.length > 0) {
     feedbackMessages.push(
       `Review spending in these categories as they exceeded your set limits: ${categoriesOverLimit.join(
@@ -322,15 +297,11 @@ const Stats = () => {
       )}.`
     );
   }
-
-  // Rolling Average Feedback (if applicable)
   if (view === "monthly") {
     feedbackMessages.push(
       `Your 7-day rolling average expense is $${rollingAvg}.`
     );
   }
-
-  // Comparative Analysis
   if (totalLimitByCategory !== 0 && spendingVsLimitPercent !== "N/A") {
     feedbackMessages.push(
       `Overall, you are using ${spendingVsLimitPercent}% of your total expense limits.`
@@ -383,22 +354,43 @@ const Stats = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4">Transaction Stats</h2>
-
-      {/* Overall Metrics Card */}
-      <div className="card p-3 mb-4 shadow-sm">
-        <div className="row">
-          <div className="col-md-4">
-            <strong>Total Income:</strong> ${totalIncome.toFixed(2)}
-          </div>
-          <div className="col-md-4">
-            <strong>Total Expense:</strong> ${totalExpense.toFixed(2)}
-          </div>
-          <div className="col-md-4">
-            <strong>Net Income:</strong>{" "}
-            <span className={netIncome < 0 ? "text-danger" : "text-success"}>
-              ${netIncome.toFixed(2)}
-            </span>
+      {/* Redesigned Summary Card */}
+      <div
+        className="card mb-4 shadow-sm"
+        style={{ backgroundColor: "#ece5c7", color: "#116a7b" }}
+      >
+        <div
+          className="card-header text-center"
+          style={{ backgroundColor: "#116a7b", color: "#ece5c7" }}
+        >
+          <h3>Financial Overview</h3>
+        </div>
+        <div className="card-body">
+          <div className="row text-center">
+            <div className="col-md-4 mb-3 mb-md-0">
+              <h5>
+                <i className="fas fa-arrow-up"></i> Total Income
+              </h5>
+              <p className="display-6">${totalIncome.toFixed(2)}</p>
+            </div>
+            <div className="col-md-4 mb-3 mb-md-0">
+              <h5>
+                <i className="fas fa-arrow-down"></i> Total Expense
+              </h5>
+              <p className="display-6">${totalExpense.toFixed(2)}</p>
+            </div>
+            <div className="col-md-4">
+              <h5>
+                <i className="fas fa-balance-scale"></i> Net Income
+              </h5>
+              <p
+                className={`display-6 ${
+                  netIncome < 0 ? "text-danger" : "text-success"
+                }`}
+              >
+                ${netIncome.toFixed(2)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -411,6 +403,11 @@ const Stats = () => {
               ? "btn-primary"
               : "btn-outline-primary"
           }`}
+          style={{
+            backgroundColor: view === "monthly" && !useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: view === "monthly" && !useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => {
             setView("monthly");
             setUseCustom(false);
@@ -424,6 +421,11 @@ const Stats = () => {
               ? "btn-primary"
               : "btn-outline-primary"
           }`}
+          style={{
+            backgroundColor: view === "yearly" && !useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: view === "yearly" && !useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => {
             setView("yearly");
             setUseCustom(false);
@@ -433,6 +435,11 @@ const Stats = () => {
         </button>
         <button
           className={`btn ${useCustom ? "btn-primary" : "btn-outline-primary"}`}
+          style={{
+            backgroundColor: useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => setUseCustom(true)}
         >
           Select Month
@@ -446,6 +453,11 @@ const Stats = () => {
             className="form-control w-auto me-2"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            style={{
+              backgroundColor: "#c2dedc",
+              color: "#116a7b",
+              borderColor: "#116a7b",
+            }}
           >
             {monthOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -457,6 +469,11 @@ const Stats = () => {
             className="form-control w-auto"
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
+            style={{
+              backgroundColor: "#c2dedc",
+              color: "#116a7b",
+              borderColor: "#116a7b",
+            }}
           >
             {yearOptions.map((year) => (
               <option key={year} value={year}>
@@ -472,27 +489,56 @@ const Stats = () => {
         {!isEditing ? (
           <button
             className="btn btn-outline-secondary"
+            style={{ borderColor: "#116a7b", color: "#116a7b" }}
             onClick={() => setIsEditing(true)}
           >
             Edit Limits
           </button>
         ) : (
-          <button className="btn btn-outline-success" onClick={saveLimits}>
+          <button
+            className="btn btn-outline-success"
+            style={{ borderColor: "#116a7b", color: "#116a7b" }}
+            onClick={saveLimits}
+          >
             Save Limits
           </button>
         )}
       </div>
 
-      {/* Expense Category Spending & Limits Table */}
-      <div className="card p-3 shadow-sm mb-4">
-        <h4>Spending by Category & Limits</h4>
+      {/* Redesigned Spending by Category & Limits Section */}
+      <div
+        className="card p-4 shadow-sm mb-4"
+        style={{
+          backgroundColor: "#c2dedc",
+          borderRadius: "10px",
+          color: "#116a7b",
+        }}
+      >
+        <h4
+          className="mb-4 text-center"
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+          }}
+        >
+          Spending by Category & Limits
+        </h4>
         <div className="table-responsive">
-          <table className="table table-sm">
-            <thead>
+          <table
+            className="table table-striped table-hover"
+            style={{
+              color: "#116a7b",
+              fontSize: "0.95rem",
+              borderCollapse: "separate",
+              borderSpacing: "0 0.5rem",
+            }}
+          >
+            <thead style={{ backgroundColor: "#cdc2ae", borderRadius: "5px" }}>
               <tr>
-                <th>Category</th>
-                <th>Spending</th>
-                <th>
+                <th className="p-2">Category</th>
+                <th className="p-2">Spending</th>
+                <th className="p-2">
                   Limit (
                   {useCustom
                     ? "Custom"
@@ -501,12 +547,12 @@ const Stats = () => {
                     : "Yearly"}
                   )
                 </th>
-                <th>Status</th>
-                <th>Avg/Month</th>
+                <th className="p-2">Status</th>
+                <th className="p-2">Avg/Month</th>
               </tr>
             </thead>
             <tbody>
-              {expenseCategories.map((cat) => {
+              {expenseCategories.map((cat, index) => {
                 const categoryName = cat.value;
                 const spending = spendingByCategory[categoryName] || 0;
                 const limitVal =
@@ -535,14 +581,19 @@ const Stats = () => {
                       ? "Above Average"
                       : "Within Limit"
                     : "No Limit Set";
-                // New: Calculate average monthly spending for this category from all transactions
                 const avgMonthly =
                   averageMonthlySpendingByCategory[categoryName] || 0;
                 return (
-                  <tr key={categoryName}>
-                    <td>{categoryName}</td>
-                    <td>${spending.toFixed(2)}</td>
-                    <td>
+                  <tr
+                    key={categoryName + index}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? "#ece5c7" : "#c2dedc",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <td className="p-2">{categoryName}</td>
+                    <td className="p-2">${spending.toFixed(2)}</td>
+                    <td className="p-2">
                       <input
                         type="number"
                         value={
@@ -556,9 +607,15 @@ const Stats = () => {
                         }
                         className="form-control"
                         disabled={!isEditing}
+                        style={{
+                          backgroundColor: "#ece5c7",
+                          color: "#116a7b",
+                          borderColor: "#116a7b",
+                          borderRadius: "4px",
+                        }}
                       />
                     </td>
-                    <td>
+                    <td className="p-2">
                       {status === "Over Limit" ? (
                         <span className="text-danger">{status}</span>
                       ) : status === "Above Average" ? (
@@ -569,45 +626,74 @@ const Stats = () => {
                         <span>{status}</span>
                       )}
                     </td>
-                    <td>${avgMonthly.toFixed(2)}</td>
+                    <td className="p-2">${avgMonthly.toFixed(2)}</td>
                   </tr>
                 );
               })}
-              {/* Total row for Spending and Limits */}
-              <tr>
-                <th>Total</th>
-                <th>${totalSpendingByCategory.toFixed(2)}</th>
-                <th>${totalLimitByCategory.toFixed(2)}</th>
-                <th></th>
-                <th>${totalAvgMonthly.toFixed(2)}</th>
+              <tr
+                style={{
+                  backgroundColor: "#cdc2ae",
+                  fontWeight: "bold",
+                  borderRadius: "5px",
+                }}
+              >
+                <th className="p-2">Total</th>
+                <th className="p-2">${totalSpendingByCategory.toFixed(2)}</th>
+                <th className="p-2">${totalLimitByCategory.toFixed(2)}</th>
+                <th className="p-2"></th>
+                <th className="p-2">${totalAvgMonthly.toFixed(2)}</th>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Real-Time Analysis Alert */}
-      <div className="card p-3 shadow-sm mb-4">
-        <h4>Real-Time Analysis</h4>
-        <p>{simpleAlertMessage}</p>
-      </div>
-
-      {/* New: Category-wise Spending Percentage Section */}
-      <div className="card p-3 shadow-sm mb-4">
-        <h4>Category-wise Spending</h4>
+      {/* Redesigned Category-wise Spending Section */}
+      <div
+        className="card p-4 shadow-sm mb-4"
+        style={{
+          backgroundColor: "#ece5c7",
+          borderRadius: "10px",
+          color: "#116a7b",
+        }}
+      >
+        <h4
+          className="mb-4 text-center"
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+          }}
+        >
+          Category-wise Spending
+        </h4>
         <div className="table-responsive">
-          <table className="table table-sm">
-            <thead>
+          <table
+            className="table table-striped table-hover"
+            style={{
+              color: "#116a7b",
+              fontSize: "0.95rem",
+              borderCollapse: "separate",
+              borderSpacing: "0 0.5rem",
+            }}
+          >
+            <thead style={{ backgroundColor: "#cdc2ae", borderRadius: "5px" }}>
               <tr>
-                <th>Category</th>
-                <th>Spending Percentage</th>
+                <th className="p-2">Category</th>
+                <th className="p-2">Spending Percentage</th>
               </tr>
             </thead>
             <tbody>
-              {categoryPercentageBreakdown.map((item) => (
-                <tr key={item.category}>
-                  <td>{item.category}</td>
-                  <td>{item.percentage}%</td>
+              {categoryPercentageBreakdown.map((item, idx) => (
+                <tr
+                  key={item.category + idx}
+                  style={{
+                    backgroundColor: idx % 2 === 0 ? "#c2dedc" : "#ece5c7",
+                    borderRadius: "5px",
+                  }}
+                >
+                  <td className="p-2">{item.category}</td>
+                  <td className="p-2">{item.percentage}%</td>
                 </tr>
               ))}
             </tbody>
@@ -615,12 +701,60 @@ const Stats = () => {
         </div>
       </div>
 
-      {/* Detailed Feedback Section */}
-      <div className="card p-3 shadow-sm mb-3">
-        <h4 className="mb-3">Detailed Feedback</h4>
+      {/* Real-Time Analysis Alert */}
+      <div
+        className="card p-4 shadow-sm mb-4"
+        style={{
+          backgroundColor: "#ece5c7",
+          color: "#116a7b",
+          borderRadius: "10px",
+        }}
+      >
+        <h4
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          Real-Time Analysis
+        </h4>
+        <p className="mt-3 text-center">{simpleAlertMessage}</p>
+      </div>
+
+      {/* Redesigned Detailed Feedback Section */}
+      <div
+        className="card p-4 shadow-sm mb-3"
+        style={{
+          backgroundColor: "#ece5c7",
+          color: "#116a7b",
+          borderRadius: "10px",
+        }}
+      >
+        <h4
+          className="mb-4 text-center"
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+          }}
+        >
+          Detailed Feedback
+        </h4>
         <ul className="list-group list-group-flush">
           {feedbackMessages.map((msg, idx) => (
-            <li key={idx} className="list-group-item">
+            <li
+              key={idx}
+              className="list-group-item"
+              style={{
+                backgroundColor: "#c2dedc",
+                color: "#116a7b",
+                marginBottom: "0.5rem",
+                borderRadius: "5px",
+                padding: "0.75rem",
+              }}
+            >
               {msg}
             </li>
           ))}

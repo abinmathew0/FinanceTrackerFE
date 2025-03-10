@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal"; // ✅ Import react-modal for success message
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -40,71 +40,125 @@ const Register = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4" style={{ marginTop: "7rem" }}>
-        Create an Account
-      </h2>
-      {error && <p className="alert alert-danger">{error}</p>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="col-10 col-md-6 col-lg-6 mx-auto"
+      <div
+        className="card shadow-sm mx-auto"
+        style={{
+          maxWidth: "500px",
+          borderRadius: "10px",
+          backgroundColor: "#ece5c7", // Cream background
+          padding: "2rem",
+          marginTop: "7rem",
+        }}
       >
-        <input
-          type="text"
-          className="form-control my-2"
-          name="name"
-          placeholder="Full Name"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          className="form-control my-2"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          className="form-control my-2"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          required
-        />
-        <button
-          className="btn btn-success w-100"
-          type="submit"
-          disabled={loading}
+        <h2
+          className="text-center mb-4"
+          style={{ color: "#116a7b", fontWeight: "bold" }}
         >
-          {loading ? (
-            <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Signing up...
-            </>
-          ) : (
-            "Sign Up"
-          )}
-        </button>
-      </form>
+          Create an Account
+        </h2>
+        {error && <p className="alert alert-danger text-center">{error}</p>}
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="form-control my-2"
+            name="name"
+            placeholder="Full Name"
+            onChange={handleChange}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <input
+            type="email"
+            className="form-control my-2"
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <input
+            type="password"
+            className="form-control my-2"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <button
+            className="btn w-100 mt-3"
+            type="submit"
+            disabled={loading}
+            style={{
+              backgroundColor: "#116a7b", // Deep blue
+              color: "#ece5c7", // Cream text
+              border: "none",
+              padding: "0.75rem",
+              borderRadius: "5px",
+              fontWeight: "bold",
+            }}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Signing up...
+              </>
+            ) : (
+              "Sign Up"
+            )}
+          </button>
+        </form>
+        <p className="text-center mt-3" style={{ color: "#116a7b" }}>
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </div>
 
       {/* ✅ Success Modal */}
       <Modal
         isOpen={successModalIsOpen}
         onRequestClose={closeSuccessModal}
-        className="modal-dialog"
+        className="modal-dialog modal-dialog-centered"
+        style={{
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          },
+          content: {
+            maxWidth: "400px",
+            margin: "auto",
+            borderRadius: "10px",
+            padding: "2rem",
+            backgroundColor: "#ece5c7", // Cream background
+            border: "1px solid #116a7b",
+            color: "#116a7b",
+          },
+        }}
       >
-        <div className="modal-content p-4 text-center w-50 mx-auto">
+        <div className="modal-content p-4 text-center">
           <h4 className="text-success">🎉 Registration Successful!</h4>
           <p>You have successfully created an account. You can now log in.</p>
           <button
             className="btn btn-primary w-50 mx-auto"
             onClick={closeSuccessModal}
+            style={{
+              backgroundColor: "#116a7b",
+              color: "#ece5c7",
+              border: "none",
+              padding: "0.5rem 1rem",
+              borderRadius: "5px",
+            }}
           >
             Go to Login
           </button>

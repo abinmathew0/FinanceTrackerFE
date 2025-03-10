@@ -48,59 +48,91 @@ const ChangePassword = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4" style={{ marginTop: "7rem" }}>
-        Change Password
-      </h2>
-      {error && <p className="alert alert-danger text-center">{error}</p>}
-      {message && <p className="alert alert-success text-center">{message}</p>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="col-10 col-md-6 col-lg-4 mx-auto"
+      <div
+        className="card shadow-sm mx-auto"
+        style={{
+          maxWidth: "500px",
+          borderRadius: "10px",
+          backgroundColor: "#ece5c7", // Cream background
+          padding: "2rem",
+          marginTop: "7rem",
+        }}
       >
-        <input
-          type="password"
-          className="form-control my-2"
-          placeholder="Current Password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          className="form-control my-2"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          className="form-control my-2"
-          placeholder="Confirm New Password"
-          value={confirmNewPassword}
-          onChange={(e) => setConfirmNewPassword(e.target.value)}
-          required
-        />
-        <button
-          className="btn btn-success w-100"
-          type="submit"
-          disabled={loading}
+        <h2
+          className="text-center mb-4"
+          style={{ color: "#116a7b", fontWeight: "bold" }}
         >
-          {loading ? (
-            <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Changing...
-            </>
-          ) : (
-            "Change Password"
-          )}
-        </button>
-      </form>
+          Change Password
+        </h2>
+        {error && <p className="alert alert-danger text-center">{error}</p>}
+        {message && (
+          <p className="alert alert-success text-center">{message}</p>
+        )}
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            className="form-control my-2"
+            placeholder="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <input
+            type="password"
+            className="form-control my-2"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <input
+            type="password"
+            className="form-control my-2"
+            placeholder="Confirm New Password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <button
+            className="btn w-100 mt-3"
+            type="submit"
+            disabled={loading}
+            style={{
+              backgroundColor: "#116a7b", // Deep blue
+              color: "#ece5c7", // Cream text
+              border: "none",
+              padding: "0.75rem",
+              borderRadius: "5px",
+              fontWeight: "bold",
+            }}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Changing...
+              </>
+            ) : (
+              "Change Password"
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

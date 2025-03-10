@@ -33,57 +33,85 @@ const Login = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4" style={{ marginTop: "9rem" }}>
-        Welcome to Finance Tracker. Login to continue.
-      </h2>
-      {error && <p className="alert alert-danger text-center">{error}</p>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="col-10 col-md-6 col-lg-6 mx-auto"
+      <div
+        className="card shadow-sm mb-5 mx-auto"
+        style={{
+          maxWidth: "500px",
+          borderRadius: "10px",
+          backgroundColor: "#ece5c7", // Cream background
+          padding: "1.5rem",
+          marginTop: "3rem",
+        }}
       >
-        <input
-          className="form-control my-2"
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          required
-        />
-        <input
-          className="form-control my-2"
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          required
-        />
-        <button
-          className="btn btn-primary w-100"
-          type="submit"
-          disabled={loading}
+        <h2
+          className="text-center mb-4"
+          style={{ color: "#116a7b", fontWeight: "bold" }}
         >
-          {loading ? (
-            <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Logging in...
-            </>
-          ) : (
-            "Login"
-          )}
-        </button>
-      </form>
-
-      <p className="text-center mt-3">
-        Don't have an account? <Link to="/register">Sign Up</Link>
-      </p>
-      <p className="text-center mt-2">
-        <Link to="/forgot-password">Forgot Password?</Link>
-      </p>
+          Welcome to Finance Tracker
+        </h2>
+        <p className="text-center mb-4" style={{ color: "#116a7b" }}>
+          Login to continue.
+        </p>
+        {error && <p className="alert alert-danger text-center">{error}</p>}
+        <form onSubmit={handleSubmit}>
+          <input
+            className="form-control my-2"
+            type="email"
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <input
+            className="form-control my-2"
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+            required
+            style={{
+              borderRadius: "5px",
+              border: "1px solid #116a7b",
+            }}
+          />
+          <button
+            className="btn w-100 mt-3"
+            type="submit"
+            disabled={loading}
+            style={{
+              backgroundColor: "#116a7b", // Deep blue
+              color: "#ece5c7", // Cream text
+              border: "none",
+              padding: "0.75rem",
+              borderRadius: "5px",
+              fontWeight: "bold",
+            }}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </button>
+        </form>
+        <p className="text-center mt-3" style={{ color: "#116a7b" }}>
+          Don't have an account? <Link to="/register">Sign Up</Link>
+        </p>
+        <p className="text-center mt-2" style={{ color: "#116a7b" }}>
+          <Link to="/forgot-password">Forgot Password?</Link>
+        </p>
+      </div>
     </div>
   );
 };

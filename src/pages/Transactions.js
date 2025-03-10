@@ -192,11 +192,23 @@ const Transactions = () => {
 
   return (
     <div className="container">
-      <h2 className="mt-5 mb-3 text-center">Transaction History</h2>
+      {/* Main Heading */}
+      <h2
+        className="mt-5 mb-3 text-center"
+        style={{ color: "#116a7b", fontWeight: "bold" }}
+      >
+        Transaction History
+      </h2>
+      {/* Filter Controls */}
       <div className="row mb-3">
         <div className="col-md-3 col-12 mb-2">
           <select
             className="form-control"
+            style={{
+              backgroundColor: "#c2dedc",
+              color: "#116a7b",
+              borderColor: "#116a7b",
+            }}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -214,12 +226,28 @@ const Transactions = () => {
             placeholder="Select Categories"
             className="basic-multi-select"
             classNamePrefix="select"
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                backgroundColor: "#c2dedc",
+                borderColor: "#116a7b",
+              }),
+              singleValue: (provided) => ({
+                ...provided,
+                color: "#116a7b",
+              }),
+            }}
           />
         </div>
         <div className="col-md-3 col-12 mb-2">
           <input
             type="date"
             className="form-control"
+            style={{
+              backgroundColor: "#c2dedc",
+              color: "#116a7b",
+              borderColor: "#116a7b",
+            }}
             placeholder="Select start date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -229,32 +257,71 @@ const Transactions = () => {
           <input
             type="date"
             className="form-control"
+            style={{
+              backgroundColor: "#c2dedc",
+              color: "#116a7b",
+              borderColor: "#116a7b",
+            }}
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
       </div>
+      {/* Action Buttons */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <div className="mb-2">
-          <button className="btn btn-primary me-2" onClick={handleFilter}>
+          <button
+            className="btn me-2"
+            style={{
+              backgroundColor: "#116a7b",
+              borderColor: "#116a7b",
+              color: "#ece5c7",
+            }}
+            onClick={handleFilter}
+          >
             Apply Filters
           </button>
-          <button className="btn btn-secondary" onClick={clearFilters}>
+          <button
+            className="btn"
+            style={{
+              backgroundColor: "#cdc2ae",
+              borderColor: "#116a7b",
+              color: "#116a7b",
+            }}
+            onClick={clearFilters}
+          >
             Clear Filters
           </button>
         </div>
         <div className="mb-2">
-          <Link className="btn btn-success me-2" to="/dashboard">
+          <Link
+            className="btn me-2"
+            style={{
+              backgroundColor: "#116a7b",
+              borderColor: "#116a7b",
+              color: "#ece5c7",
+            }}
+            to="/dashboard"
+          >
             📊 Dashboard
           </Link>
-          <Link className="btn btn-success" to="/add-transaction">
+          <Link
+            className="btn"
+            style={{
+              backgroundColor: "#116a7b",
+              borderColor: "#116a7b",
+              color: "#ece5c7",
+            }}
+            to="/add-transaction"
+          >
             + Add Transaction
           </Link>
         </div>
       </div>
+      {/* Transactions Table */}
       <div className="table-responsive">
         <table className="table mt-3">
-          <thead>
+          <thead style={{ backgroundColor: "#cdc2ae", color: "#116a7b" }}>
             <tr>
               <th>Name</th>
               <th>Amount</th>
@@ -264,7 +331,7 @@ const Transactions = () => {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{ backgroundColor: "#ece5c7", color: "#116a7b" }}>
             {filteredTransactions.length > 0 ? (
               filteredTransactions.map((txn) => (
                 <tr key={txn.id}>
@@ -277,6 +344,11 @@ const Transactions = () => {
                     <div className="d-flex">
                       <button
                         className="btn btn-warning btn-sm me-3"
+                        style={{
+                          backgroundColor: "#cdc2ae",
+                          color: "#116a7b",
+                          borderColor: "#116a7b",
+                        }}
                         onClick={() => openEditModal(txn)}
                       >
                         <span className="d-inline d-sm-none">✏️</span>
@@ -284,6 +356,11 @@ const Transactions = () => {
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
+                        style={{
+                          backgroundColor: "#E74C3C",
+                          borderColor: "#E74C3C",
+                          color: "#ece5c7",
+                        }}
                         onClick={() => openDeleteModal(txn)}
                       >
                         <span className="d-inline d-sm-none">🗑</span>
@@ -302,7 +379,7 @@ const Transactions = () => {
             )}
           </tbody>
           {filteredTransactions.length > 0 && (
-            <tfoot>
+            <tfoot style={{ backgroundColor: "#cdc2ae", color: "#116a7b" }}>
               <tr>
                 <td colSpan="1">
                   <strong>Total</strong>
@@ -315,6 +392,7 @@ const Transactions = () => {
           )}
         </table>
       </div>
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalIsOpen}
         onRequestClose={closeDeleteModal}
@@ -322,18 +400,40 @@ const Transactions = () => {
       >
         <div
           className="modal-content p-3 text-center mx-auto mt-5"
-          style={{ maxWidth: "500px", width: "90%" }}
+          style={{
+            maxWidth: "500px",
+            width: "90%",
+            backgroundColor: "#ece5c7",
+            color: "#116a7b",
+          }}
         >
           <h4>Confirm Deletion</h4>
           <p>Are you sure you want to delete this transaction?</p>
-          <button className="btn btn-danger me-2 mt-3" onClick={handleDelete}>
+          <button
+            className="btn btn-danger me-2 mt-3"
+            onClick={handleDelete}
+            style={{
+              backgroundColor: "#E74C3C",
+              borderColor: "#E74C3C",
+              color: "#ece5c7",
+            }}
+          >
             Yes, Delete
           </button>
-          <button className="btn btn-secondary mt-3" onClick={closeDeleteModal}>
+          <button
+            className="btn btn-secondary mt-3"
+            onClick={closeDeleteModal}
+            style={{
+              backgroundColor: "#cdc2ae",
+              borderColor: "#116a7b",
+              color: "#116a7b",
+            }}
+          >
             Cancel
           </button>
         </div>
       </Modal>
+      {/* Edit Transaction Modal */}
       <Modal
         isOpen={editModalIsOpen}
         onRequestClose={closeEditModal}
@@ -341,7 +441,12 @@ const Transactions = () => {
       >
         <div
           className="modal-content p-3 text-center mx-auto mt-5"
-          style={{ maxWidth: "500px", width: "90%" }}
+          style={{
+            maxWidth: "500px",
+            width: "90%",
+            backgroundColor: "#ece5c7",
+            color: "#116a7b",
+          }}
         >
           <h4>Edit Transaction</h4>
           <form onSubmit={handleEditSubmit}>
@@ -351,6 +456,11 @@ const Transactions = () => {
                 type="text"
                 name="name"
                 className="form-control"
+                style={{
+                  backgroundColor: "#c2dedc",
+                  color: "#116a7b",
+                  borderColor: "#116a7b",
+                }}
                 value={transactionToEdit ? transactionToEdit.name : ""}
                 onChange={handleEditChange}
                 required
@@ -362,6 +472,11 @@ const Transactions = () => {
                 type="number"
                 name="amount"
                 className="form-control"
+                style={{
+                  backgroundColor: "#c2dedc",
+                  color: "#116a7b",
+                  borderColor: "#116a7b",
+                }}
                 value={transactionToEdit ? transactionToEdit.amount : ""}
                 onChange={handleEditChange}
                 required
@@ -372,6 +487,11 @@ const Transactions = () => {
               <select
                 name="type"
                 className="form-control"
+                style={{
+                  backgroundColor: "#c2dedc",
+                  color: "#116a7b",
+                  borderColor: "#116a7b",
+                }}
                 value={transactionToEdit ? transactionToEdit.type : ""}
                 onChange={handleEditChange}
                 required
@@ -385,6 +505,11 @@ const Transactions = () => {
               <select
                 name="category"
                 className="form-control"
+                style={{
+                  backgroundColor: "#c2dedc",
+                  color: "#116a7b",
+                  borderColor: "#116a7b",
+                }}
                 value={transactionToEdit ? transactionToEdit.category : ""}
                 onChange={handleEditChange}
                 required
@@ -402,6 +527,11 @@ const Transactions = () => {
                 type="date"
                 name="date"
                 className="form-control"
+                style={{
+                  backgroundColor: "#c2dedc",
+                  color: "#116a7b",
+                  borderColor: "#116a7b",
+                }}
                 value={
                   transactionToEdit ? formatDate(transactionToEdit.date) : ""
                 }
@@ -409,12 +539,25 @@ const Transactions = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-success mt-3 me-2">
+            <button
+              type="submit"
+              className="btn btn-success mt-3 me-2"
+              style={{
+                backgroundColor: "#116a7b",
+                borderColor: "#116a7b",
+                color: "#ece5c7",
+              }}
+            >
               Save Changes
             </button>
             <button
               type="button"
               className="btn btn-secondary mt-3"
+              style={{
+                backgroundColor: "#cdc2ae",
+                borderColor: "#116a7b",
+                color: "#116a7b",
+              }}
               onClick={closeEditModal}
             >
               Cancel

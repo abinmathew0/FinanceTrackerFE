@@ -71,9 +71,6 @@ const Dashboard = () => {
   };
 
   // Filter transactions based on selected view:
-  // If using custom selection, filter by selectedMonth & selectedYear.
-  // Otherwise, if viewMode is "month" use current month and year,
-  // or if viewMode is "year" filter by current year.
   const displayTransactions = useCustom
     ? transactions.filter((txn) => {
         const d = new Date(txn.date);
@@ -95,7 +92,7 @@ const Dashboard = () => {
         return d.getFullYear() === currentDate.getFullYear();
       });
 
-  // Compute Overall Metrics (ensure numeric conversion)
+  // Compute Overall Metrics
   const income = displayTransactions
     .filter((txn) => txn.type === "income")
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
@@ -117,7 +114,6 @@ const Dashboard = () => {
   // Transaction Trends Line Chart
   let lineData = {};
   if (viewMode === "month" && !useCustom) {
-    // Group transactions by day for current month view
     const transactionsByDate = displayTransactions.reduce((acc, txn) => {
       const date = new Date(txn.date).toLocaleDateString();
       acc[date] = (acc[date] || 0) + Number(txn.amount);
@@ -136,7 +132,6 @@ const Dashboard = () => {
       ],
     };
   } else {
-    // Group transactions by month for year view or custom selection
     const transactionsByMonthLine = displayTransactions.reduce((acc, txn) => {
       const month = new Date(txn.date).toLocaleString("default", {
         month: "short",
@@ -178,7 +173,6 @@ const Dashboard = () => {
   // Month-wise / Day-wise Overview Bar Chart
   let monthBarData = {};
   if (viewMode === "month" && !useCustom) {
-    // Group by day for current month view
     const transactionsByDay = displayTransactions.reduce((acc, txn) => {
       const day = new Date(txn.date).getDate();
       acc[day] = (acc[day] || 0) + Number(txn.amount);
@@ -195,7 +189,6 @@ const Dashboard = () => {
       ],
     };
   } else {
-    // Group by month (with year) for year view or custom selection
     const transactionsByMonth = displayTransactions.reduce((acc, txn) => {
       const month = new Date(txn.date).toLocaleString("default", {
         month: "short",
@@ -218,7 +211,13 @@ const Dashboard = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center">Dashboard</h2>
+      {/* Main Heading */}
+      <h2
+        className="text-center mb-4"
+        style={{ color: "#116a7b", fontWeight: "bold" }}
+      >
+        Dashboard
+      </h2>
 
       {/* View Mode Toggle */}
       <div className="d-flex justify-content-center my-4">
@@ -228,6 +227,12 @@ const Dashboard = () => {
               ? "btn-primary"
               : "btn-outline-primary"
           }`}
+          style={{
+            backgroundColor:
+              viewMode === "month" && !useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: viewMode === "month" && !useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => {
             setViewMode("month");
             setUseCustom(false);
@@ -241,6 +246,11 @@ const Dashboard = () => {
               ? "btn-primary"
               : "btn-outline-primary"
           }`}
+          style={{
+            backgroundColor: viewMode === "year" && !useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: viewMode === "year" && !useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => {
             setViewMode("year");
             setUseCustom(false);
@@ -250,6 +260,11 @@ const Dashboard = () => {
         </button>
         <button
           className={`btn ${useCustom ? "btn-primary" : "btn-outline-primary"}`}
+          style={{
+            backgroundColor: useCustom ? "#116a7b" : "",
+            borderColor: "#116a7b",
+            color: useCustom ? "#ece5c7" : "#116a7b",
+          }}
           onClick={() => setUseCustom(true)}
         >
           Select Month
