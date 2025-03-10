@@ -10,6 +10,7 @@ const AddTransaction = () => {
     type: "expense",
     category: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const incomeCategories = [
     "Salary/Wages",
@@ -44,6 +45,7 @@ const AddTransaction = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await axios.post(`${API_URL}/transactions`, formData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -51,13 +53,17 @@ const AddTransaction = () => {
       window.location.href = "/";
     } catch (err) {
       console.error("Error adding transaction", err);
+      setLoading(false);
     }
   };
 
   return (
     <div className="container mt-4">
       <h2>Add Transaction</h2>
-      <form onSubmit={handleSubmit} className="w-50 mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="col-10 col-md-6 col-lg-6 mx-auto"
+      >
         <input
           className="form-control my-2"
           type="text"
@@ -108,7 +114,20 @@ const AddTransaction = () => {
           <option value="Other">Other</option>
         </select>
 
-        <button className="btn btn-success w-100">Add Transaction</button>
+        <button className="btn btn-success w-100" disabled={loading}>
+          {loading ? (
+            <>
+              <span
+                className="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>{" "}
+              Adding...
+            </>
+          ) : (
+            "Add Transaction"
+          )}
+        </button>
       </form>
     </div>
   );

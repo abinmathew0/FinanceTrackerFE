@@ -4,7 +4,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-// Updated expense categories with additional ones
 const expenseCategories = [
   { value: "Rent/Mortgage", label: "Rent/Mortgage" },
   { value: "Utilities", label: "Utilities" },
@@ -24,7 +23,6 @@ const expenseCategories = [
 const Stats = () => {
   const [transactions, setTransactions] = useState([]);
   const [view, setView] = useState("monthly"); // "monthly" or "yearly"
-  // Limits stored as an object: { [category]: { monthly: number, yearly: number } }
   const [limits, setLimits] = useState({});
   const [isEditing, setIsEditing] = useState(false);
 
@@ -34,12 +32,19 @@ const Stats = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  // Load saved limits from localStorage
+  // Load limits from backend on mount
   useEffect(() => {
-    const savedLimits = localStorage.getItem("expenseLimits");
-    if (savedLimits) {
-      setLimits(JSON.parse(savedLimits));
-    }
+    const fetchLimits = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/expense-limits`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setLimits(res.data);
+      } catch (err) {
+        console.error("Error fetching limits:", err);
+      }
+    };
+    fetchLimits();
   }, []);
 
   useEffect(() => {
@@ -56,10 +61,7 @@ const Stats = () => {
     fetchTransactions();
   }, []);
 
-  // Filter transactions based on selected view:
-  // If using custom selection, filter by selectedMonth & selectedYear.
-  // Otherwise, if view is "monthly" use current month and year,
-  // or if view is "yearly", filter by current year.
+  // Filter transactions based on selected view
   const filteredTransactions = transactions.filter((txn) => {
     const txnDate = new Date(txn.date);
     if (useCustom) {
@@ -79,7 +81,7 @@ const Stats = () => {
     }
   });
 
-  // Overall Metrics (includes both income and expense)
+  // Overall Metrics: Total Income, Total Expense, Net Income
   const totalIncome = filteredTransactions
     .filter((txn) => txn.type === "income")
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
@@ -88,7 +90,7 @@ const Stats = () => {
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
   const netIncome = totalIncome - totalExpense;
 
-  // Compute spending by expense category.
+  // Compute spending by expense category
   const spendingByCategory = {};
   filteredTransactions.forEach((txn) => {
     if (txn.type === "expense") {
@@ -97,17 +99,79 @@ const Stats = () => {
     }
   });
 
-  // Historical & Snapshot Metrics Calculations
-
-  // Category Breakdown sorted in descending order
-  const categoryBreakdown = Object.keys(spendingByCategory).map((cat) => {
-    const amount = spendingByCategory[cat];
+  // Calculate percentage breakdown for each category
+  const categoryBreakdown = expenseCategories.map((cat) => {
+    const spending = spendingByCategory[cat.value] || 0;
     const percentage =
-      totalExpense > 0 ? ((amount / totalExpense) * 100).toFixed(2) : "0.00";
-    return { category: cat, amount, percentage };
+      totalExpense > 0 ? ((spending / totalExpense) * 100).toFixed(2) : "0.00";
+    return { category: cat.value, spending, percentage };
   });
-  categoryBreakdown.sort((a, b) => b.amount - a.amount);
 
+  // New: Create a sorted array of categories with spending (nonzero) in descending order
+  const categoryPercentageBreakdown = categoryBreakdown
+    .filter((item) => Number(item.spending) > 0)
+    .sort((a, b) => Number(b.percentage) - Number(a.percentage));
+
+  // Budget vs. Actual: Check which categories are over their set limits
+  const categoriesOverLimit = expenseCategories
+    .filter((cat) => {
+      const spending = spendingByCategory[cat.value] || 0;
+      const limitVal = limits[cat.value] && limits[cat.value][view];
+      return limitVal && spending > limitVal;
+    })
+    .map((cat) => cat.value);
+
+  const simpleAlertMessage =
+    categoriesOverLimit.length > 0
+      ? `Categories over limit: ${categoriesOverLimit.join(", ")}`
+      : "All spending within limits.";
+
+  // Recurring vs. One-Time Expenses (assume these categories are recurring)
+  const recurringCategories = ["Rent/Mortgage", "Utilities", "Subscriptions"];
+  const recurringExpense = filteredTransactions
+    .filter(
+      (txn) =>
+        txn.type === "expense" && recurringCategories.includes(txn.category)
+    )
+    .reduce((sum, txn) => sum + Number(txn.amount), 0);
+  //const nonRecurringExpense = totalExpense - recurringExpense;
+
+  // Cash Flow Analysis & Savings Rate
+  const savingsRate =
+    totalIncome > 0 ? ((netIncome / totalIncome) * 100).toFixed(2) : "N/A";
+
+  // Transaction Frequency Analysis
+  const transactionCount = filteredTransactions.length;
+
+  // Rolling Average (for expenses) for the last 7 days if in monthly view
+  let rollingAvg = 0;
+  if (view === "monthly") {
+    // Get today's date, then calculate expenses for the last 7 days
+    const today = new Date();
+    const past7Days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      past7Days.push(d.toLocaleDateString());
+    }
+    const dailyTotals = past7Days.map((dateStr) => {
+      return filteredTransactions
+        .filter(
+          (txn) =>
+            txn.type === "expense" &&
+            new Date(txn.date).toLocaleDateString() === dateStr
+        )
+        .reduce((sum, txn) => sum + Number(txn.amount), 0);
+    });
+    rollingAvg =
+      dailyTotals.length > 0
+        ? (dailyTotals.reduce((a, b) => a + b, 0) / dailyTotals.length).toFixed(
+            2
+          )
+        : 0;
+  }
+
+  // Variability & Consistency: Calculate average expense, variance, and standard deviation
   const expenseTransactions = filteredTransactions.filter(
     (txn) => txn.type === "expense"
   );
@@ -119,142 +183,130 @@ const Stats = () => {
           .map((txn) => Math.pow(Number(txn.amount) - avgExpense, 2))
           .reduce((sum, val) => sum + val, 0) / expenseCount
       : 0;
-  const stdDeviation = Math.sqrt(variance);
-  const topExpenses = [...expenseTransactions]
-    .sort((a, b) => Number(b.amount) - Number(a.amount))
-    .slice(0, 5);
+  const stdDeviation = Math.sqrt(variance).toFixed(2);
 
-  // Ongoing & Dynamic Metrics Calculations (based on current month)
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  const currentMonthExpenseTransactions = transactions.filter((txn) => {
-    const d = new Date(txn.date);
-    return (
-      txn.type === "expense" &&
-      d.getMonth() === currentMonth &&
-      d.getFullYear() === currentYear
-    );
-  });
-  const runningTotal = currentMonthExpenseTransactions.reduce(
-    (sum, txn) => sum + Number(txn.amount),
-    0
-  );
-  const daysElapsed = currentDate.getDate();
-  const burnRate = daysElapsed > 0 ? runningTotal / daysElapsed : 0;
+  // Forecasting & Trend Projection: Forecast expense for the rest of the month (if monthly view)
+  let expenseForecast = 0;
+  if (view === "monthly") {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const totalDaysInMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    ).getDate();
 
-  // 7-day Rolling Average
-  const datesInMonth = [];
-  for (let i = 1; i <= daysElapsed; i++) {
-    const date = new Date(currentYear, currentMonth, i).toLocaleDateString();
-    datesInMonth.push(date);
-  }
-  const dailyTotals = datesInMonth.map(
-    (date) =>
-      currentMonthExpenseTransactions
-        .filter((txn) => new Date(txn.date).toLocaleDateString() === date)
-        .reduce((sum, txn) => sum + Number(txn.amount), 0) || 0
-  );
-  const last7Days = dailyTotals.slice(-7);
-  const rollingAvg =
-    last7Days.length > 0
-      ? last7Days.reduce((sum, val) => sum + val, 0) / last7Days.length
-      : 0;
+    // Assume fixed rent is from the "Rent/Mortgage" category.
+    const fixedRent = spendingByCategory["Rent/Mortgage"] || 0;
 
-  const recurringCategories = ["Rent/Mortgage", "Utilities", "Subscriptions"];
-  const recurringExpense = currentMonthExpenseTransactions.reduce(
-    (sum, txn) =>
-      recurringCategories.includes(txn.category)
-        ? sum + Number(txn.amount)
-        : sum,
-    0
-  );
-  const nonRecurringExpense = runningTotal - recurringExpense;
+    // Calculate expense excluding rent.
+    const expenseWithoutRent = totalExpense - fixedRent;
 
-  const currentMonthIncome = transactions
-    .filter((txn) => {
-      const d = new Date(txn.date);
-      return (
-        txn.type === "income" &&
-        d.getMonth() === currentMonth &&
-        d.getFullYear() === currentYear
-      );
-    })
-    .reduce((sum, txn) => sum + Number(txn.amount), 0);
-  const netCashFlow = currentMonthIncome - runningTotal;
-  const savingsRate =
-    currentMonthIncome > 0
-      ? ((currentMonthIncome - runningTotal) / currentMonthIncome) * 100
-      : 0;
-
-  const daysInMonthCalc = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const expenseForecast = burnRate * daysInMonthCalc;
-
-  const todayStr = currentDate.toLocaleDateString();
-  const todayExpense = currentMonthExpenseTransactions
-    .filter((txn) => new Date(txn.date).toLocaleDateString() === todayStr)
-    .reduce((sum, txn) => sum + Number(txn.amount), 0);
-
-  // ------------------ Dynamic Alerts & Anomaly Detection ------------------
-  const anomalyAlerts = [];
-  if (todayExpense > rollingAvg * 2) {
-    anomalyAlerts.push("High spending today!");
-  }
-  if (avgExpense > 0 && stdDeviation > 0.75 * avgExpense) {
-    anomalyAlerts.push("High spending variability detected!");
-  }
-  let overLimitCount = 0;
-  expenseCategories.forEach((cat) => {
-    const categoryName = cat.value;
-    const spending = spendingByCategory[categoryName] || 0;
-    const limitVal = (limits[categoryName] && limits[categoryName][view]) || 0;
-    let expected = 0;
-    if (view === "monthly") {
-      const daysInMonthCalc = new Date(
-        currentYear,
-        currentMonth + 1,
-        0
-      ).getDate();
-      const currentDay = currentDate.getDate();
-      expected = (limitVal / daysInMonthCalc) * currentDay;
+    // If we're past the first day, compute average for days excluding day 1.
+    if (currentDay > 1) {
+      const dailyAvgWithoutRent = expenseWithoutRent / (currentDay - 1);
+      // Forecast = fixed rent + (average for remaining days * (total days minus 1))
+      expenseForecast = (
+        fixedRent +
+        dailyAvgWithoutRent * (totalDaysInMonth - 1)
+      ).toFixed(2);
     } else {
-      const currentMonthVal = currentDate.getMonth() + 1;
-      expected = (limitVal / 12) * currentMonthVal;
+      // On the first day, the only expense might be rent.
+      expenseForecast = totalExpense.toFixed(2);
     }
-    const status =
-      limitVal > 0
-        ? spending > limitVal
-          ? "Over Limit"
-          : spending > expected
-          ? "Above Average"
-          : "Within Limit"
-        : "No Limit Set";
-    if (status === "Over Limit") overLimitCount++;
-  });
-  if (overLimitCount > 2) {
-    anomalyAlerts.push("Multiple categories are over limit!");
   }
-  if (runningTotal > 0 && recurringExpense > 0.7 * runningTotal) {
-    anomalyAlerts.push("Recurring expenses are dominating your spending!");
-  }
-  if (netCashFlow < 0) {
-    anomalyAlerts.push("Negative cash flow detected!");
-  }
-  const anomalyDisplay =
-    anomalyAlerts.length > 0
-      ? anomalyAlerts.join(" | ")
-      : "No anomalies detected";
 
-  // Function to compute status for a category based on spending, limit, and expected spending.
-  const getStatus = (spending, limit, expected) => {
-    if (limit > 0) {
-      if (spending > limit) return "Over Limit";
-      else if (spending > expected) return "Above Average";
-      else return "Within Limit";
+  // Comparative Analysis: Compare total expense to total limits set across categories
+  const totalSpendingByCategory = expenseCategories.reduce(
+    (sum, cat) => sum + (spendingByCategory[cat.value] || 0),
+    0
+  );
+  const totalLimitByCategory = expenseCategories.reduce(
+    (sum, cat) => sum + ((limits[cat.value] && limits[cat.value][view]) || 0),
+    0
+  );
+  const spendingVsLimitPercent =
+    totalLimitByCategory > 0
+      ? ((totalSpendingByCategory / totalLimitByCategory) * 100).toFixed(2)
+      : "N/A";
+
+  // Generate useful feedback messages based on the data
+  const feedbackMessages = [];
+
+  // Overall Financial Health
+  if (netIncome < 0) {
+    feedbackMessages.push(
+      "Your net income is negative. Consider reducing expenses or increasing income."
+    );
+  } else {
+    feedbackMessages.push("You have a positive net income. Good job!");
+  }
+
+  // Savings Rate
+  if (totalIncome > 0 && savingsRate !== "N/A") {
+    if (savingsRate < 20) {
+      feedbackMessages.push(
+        `Your savings rate is low at ${savingsRate}%. Consider ways to save more.`
+      );
+    } else {
+      feedbackMessages.push(`Your savings rate is healthy at ${savingsRate}%.`);
     }
-    return "No Limit Set";
-  };
+  }
 
-  // Handler for limit input changes.
+  // Recurring vs. One-Time Expenses
+  const recurringPct =
+    totalExpense > 0 ? ((recurringExpense / totalExpense) * 100).toFixed(2) : 0;
+  feedbackMessages.push(
+    `Recurring expenses account for ${recurringPct}% of your total expenses.`
+  );
+
+  // Variability & Consistency
+  if (avgExpense > 0) {
+    if (stdDeviation > avgExpense * 0.75) {
+      feedbackMessages.push(
+        "There is high variability in your expenses. Consider tracking irregular spending."
+      );
+    } else {
+      feedbackMessages.push("Your expense amounts are relatively consistent.");
+    }
+  }
+
+  // Forecasting
+  if (view === "monthly") {
+    feedbackMessages.push(
+      `Based on your current spending, your forecasted expense for this month is $${expenseForecast}.`
+    );
+  }
+
+  // Transaction Frequency
+  feedbackMessages.push(
+    `You have made ${transactionCount} transactions in the selected period.`
+  );
+
+  // Budget vs. Actual (per category)
+  if (categoriesOverLimit.length > 0) {
+    feedbackMessages.push(
+      `Review spending in these categories as they exceeded your set limits: ${categoriesOverLimit.join(
+        ", "
+      )}.`
+    );
+  }
+
+  // Rolling Average Feedback (if applicable)
+  if (view === "monthly") {
+    feedbackMessages.push(
+      `Your 7-day rolling average expense is $${rollingAvg}.`
+    );
+  }
+
+  // Comparative Analysis
+  if (totalLimitByCategory !== 0 && spendingVsLimitPercent !== "N/A") {
+    feedbackMessages.push(
+      `Overall, you are using ${spendingVsLimitPercent}% of your total expense limits.`
+    );
+  }
+
+  // Handler for limit input changes
   const handleLimitChange = (category, value) => {
     setLimits((prev) => ({
       ...prev,
@@ -265,23 +317,19 @@ const Stats = () => {
     }));
   };
 
-  // Save limits to localStorage.
-  const saveLimits = () => {
-    localStorage.setItem("expenseLimits", JSON.stringify(limits));
-    setIsEditing(false);
+  // Save limits to the database
+  const saveLimits = async () => {
+    try {
+      await axios.post(`${API_URL}/expense-limits`, limits, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error saving limits", err);
+    }
   };
 
-  // Compute total spending and total limits for defined expense categories.
-  const totalSpendingByCategory = expenseCategories.reduce(
-    (sum, cat) => sum + (spendingByCategory[cat.value] || 0),
-    0
-  );
-  const totalLimitByCategory = expenseCategories.reduce(
-    (sum, cat) => sum + ((limits[cat.value] && limits[cat.value][view]) || 0),
-    0
-  );
-
-  // Generate month options (0 - 11) and a few years (e.g., currentYear-5 to currentYear+1)
+  // Generate month and year options for custom selection
   const monthOptions = [
     { value: 0, label: "January" },
     { value: 1, label: "February" },
@@ -297,8 +345,8 @@ const Stats = () => {
     { value: 11, label: "December" },
   ];
   const yearOptions = [];
-  const startYear = currentYear - 5;
-  for (let y = startYear; y <= currentYear + 1; y++) {
+  const startYear = currentDate.getFullYear() - 5;
+  for (let y = startYear; y <= currentDate.getFullYear() + 1; y++) {
     yearOptions.push(y);
   }
 
@@ -402,7 +450,7 @@ const Stats = () => {
       </div>
 
       {/* Expense Category Spending & Limits Table */}
-      <div className="card p-3 shadow-sm">
+      <div className="card p-3 shadow-sm mb-4">
         <h4>Spending by Category & Limits</h4>
         <div className="table-responsive">
           <table className="table table-sm">
@@ -428,25 +476,30 @@ const Stats = () => {
                 const spending = spendingByCategory[categoryName] || 0;
                 const limitVal =
                   (limits[categoryName] && limits[categoryName][view]) || 0;
-                const now = new Date();
                 let expected = 0;
-                if (view === "monthly") {
-                  const daysInMonth = new Date(
-                    now.getFullYear(),
-                    now.getMonth() + 1,
-                    0
-                  ).getDate();
-                  const currentDay = useCustom
-                    ? selectedMonth === now.getMonth()
-                      ? now.getDate()
-                      : daysInMonth
-                    : now.getDate();
-                  expected = (limitVal / daysInMonth) * currentDay;
-                } else {
-                  const currentMonth = now.getMonth() + 1;
-                  expected = (limitVal / 12) * currentMonth;
+                if (limitVal > 0) {
+                  const now = new Date();
+                  if (view === "monthly") {
+                    const currentDay = now.getDate();
+                    const totalDaysInMonth = new Date(
+                      now.getFullYear(),
+                      now.getMonth() + 1,
+                      0
+                    ).getDate();
+                    expected = (limitVal / totalDaysInMonth) * currentDay;
+                  } else {
+                    const currentMonth = now.getMonth() + 1;
+                    expected = (limitVal / 12) * currentMonth;
+                  }
                 }
-                const status = getStatus(spending, limitVal, expected);
+                const status =
+                  limitVal > 0
+                    ? spending > limitVal
+                      ? "Over Limit"
+                      : spending > expected
+                      ? "Above Average"
+                      : "Within Limit"
+                    : "No Limit Set";
                 return (
                   <tr key={categoryName}>
                     <td>{categoryName}</td>
@@ -475,7 +528,7 @@ const Stats = () => {
                       ) : status === "Within Limit" ? (
                         <span className="text-success">{status}</span>
                       ) : (
-                        status
+                        <span>{status}</span>
                       )}
                     </td>
                   </tr>
@@ -493,77 +546,28 @@ const Stats = () => {
         </div>
       </div>
 
-      {/* ------------------ Additional Historical & Snapshot Metrics ------------------ */}
-      <div className="mt-5">
-        <h3>Historical & Snapshot Metrics</h3>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Total Spending:</strong> ${totalExpense.toFixed(2)}
-          </p>
-          <p>
-            Sum all expenses to understand your overall cash outflow over the
-            selected period.
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <h5>Category Breakdown:</h5>
-          <table className="table">
+      {/* Real-Time Analysis Alert */}
+      <div className="card p-3 shadow-sm mb-4">
+        <h4>Real-Time Analysis</h4>
+        <p>{simpleAlertMessage}</p>
+      </div>
+
+      {/* New: Category-wise Spending Percentage Section */}
+      <div className="card p-3 shadow-sm mb-4">
+        <h4>Category-wise Spending</h4>
+        <div className="table-responsive">
+          <table className="table table-sm">
             <thead>
               <tr>
                 <th>Category</th>
-                <th>Total</th>
-                <th>Percentage</th>
+                <th>Spending Percentage</th>
               </tr>
             </thead>
             <tbody>
-              {categoryBreakdown.map((item) => (
+              {categoryPercentageBreakdown.map((item) => (
                 <tr key={item.category}>
                   <td>{item.category}</td>
-                  <td>${Number(item.amount).toFixed(2)}</td>
                   <td>{item.percentage}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Average Expense:</strong> ${avgExpense.toFixed(2)}
-          </p>
-          <p>
-            Total spending divided by the number of transactions provides an
-            understanding of your typical expense size.
-          </p>
-          <p>
-            <strong>Transaction Frequency:</strong> {expenseCount}
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Variance & Standard Deviation:</strong>{" "}
-            {variance.toFixed(2)} & {stdDeviation.toFixed(2)}
-          </p>
-          <p>
-            High variance indicates inconsistent spending, while low variance
-            suggests stable expenses.
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <h5>Top Expenses & Outliers:</h5>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topExpenses.map((txn) => (
-                <tr key={txn.id}>
-                  <td>{new Date(txn.date).toLocaleDateString()}</td>
-                  <td>{txn.category}</td>
-                  <td>${Number(txn.amount).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -571,46 +575,16 @@ const Stats = () => {
         </div>
       </div>
 
-      {/* ------------------ Additional Ongoing & Dynamic Metrics ------------------ */}
-      <div className="mt-5">
-        <h3>Ongoing & Dynamic Metrics</h3>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Running Total & Burn Rate (Current Month):</strong> $
-            {runningTotal.toFixed(2)} | Daily Average: ${burnRate.toFixed(2)}
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>7-Day Rolling Average:</strong> ${rollingAvg.toFixed(2)}
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Recurring vs. Non-Recurring Expenses:</strong> Recurring: $
-            {recurringExpense.toFixed(2)} | Non-Recurring: $
-            {nonRecurringExpense.toFixed(2)}
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Savings Rate & Net Cash Flow (Current Month):</strong>{" "}
-            Savings Rate: {savingsRate.toFixed(2)}% | Net Cash Flow: $
-            {netCashFlow.toFixed(2)}
-          </p>
-        </div>
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Expense Forecasting:</strong> Projected Monthly Expense: $
-            {expenseForecast.toFixed(2)}
-          </p>
-        </div>
-        {/* ------------------ Alerts & Anomaly Detection Section ------------------ */}
-        <div className="card p-3 mb-3 shadow-sm">
-          <p>
-            <strong>Alerts & Anomaly Detection:</strong> {anomalyDisplay}
-          </p>
-        </div>
+      {/* Detailed Feedback Section */}
+      <div className="card p-3 shadow-sm mb-3">
+        <h4 className="mb-3">Detailed Feedback</h4>
+        <ul className="list-group list-group-flush">
+          {feedbackMessages.map((msg, idx) => (
+            <li key={idx} className="list-group-item">
+              {msg}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

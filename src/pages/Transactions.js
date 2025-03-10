@@ -208,6 +208,7 @@ const Transactions = () => {
           <input
             type="date"
             className="form-control"
+            placeholder="Select start date" 
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />

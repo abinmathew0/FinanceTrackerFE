@@ -40,7 +40,7 @@ const Login = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="col-10 col-md-6 col-lg-4 mx-auto"
+        className="col-10 col-md-6 col-lg-6 mx-auto"
       >
         <input
           className="form-control my-2"
