@@ -178,6 +178,18 @@ const Transactions = () => {
     }
   };
 
+  // Helper function to format date or return empty string for invalid date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0];
+  };
+
+  // Calculate total amount of displayed transactions
+  const totalAmount = filteredTransactions.reduce(
+    (acc, txn) => acc + Number(txn.amount),
+    0
+  );
+
   return (
     <div className="container">
       <h2 className="mt-5 mb-3 text-center">Transaction History</h2>
@@ -208,7 +220,7 @@ const Transactions = () => {
           <input
             type="date"
             className="form-control"
-            placeholder="Select start date" 
+            placeholder="Select start date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
@@ -289,6 +301,18 @@ const Transactions = () => {
               </tr>
             )}
           </tbody>
+          {filteredTransactions.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan="1">
+                  <strong>Total</strong>
+                </td>
+                <td colSpan="5">
+                  <strong>${totalAmount.toFixed(2)}</strong>
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       <Modal
@@ -379,11 +403,7 @@ const Transactions = () => {
                 name="date"
                 className="form-control"
                 value={
-                  transactionToEdit
-                    ? new Date(transactionToEdit.date)
-                        .toISOString()
-                        .split("T")[0]
-                    : ""
+                  transactionToEdit ? formatDate(transactionToEdit.date) : ""
                 }
                 onChange={handleEditChange}
                 required
