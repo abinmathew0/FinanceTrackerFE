@@ -11,6 +11,7 @@ import {
   LineElement,
   BarElement,
 } from "chart.js";
+import FinanceQuote from "./FinanceQuote"; // Import the finance quote component
 
 ChartJS.register(
   Tooltip,
@@ -218,6 +219,9 @@ const Dashboard = () => {
       >
         Dashboard
       </h2>
+
+      {/* Finance Quote Section */}
+      <FinanceQuote />
 
       {/* View Mode Toggle */}
       <div className="d-flex justify-content-center my-4">

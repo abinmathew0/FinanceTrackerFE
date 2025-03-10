@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import Modal from "react-modal"; // ✅ Import Modal for confirmation dialog
 
 const API_URL = process.env.REACT_APP_API_URL;
+const itemsPerPage = 15; // Number of transactions to show per page
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -18,6 +19,8 @@ const Transactions = () => {
   // New states for edit feature
   const [editModalIsOpen, setEditModalIsOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState(null);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Updated categories (includes new expense categories)
   const categories = [
@@ -56,6 +59,7 @@ const Transactions = () => {
       });
       setTransactions(res.data);
       setFilteredTransactions(res.data);
+      setCurrentPage(1); // Reset pagination on initial load
     } catch (err) {
       console.error("❌ Error fetching transactions:", err);
     }
@@ -88,6 +92,7 @@ const Transactions = () => {
     }
 
     setFilteredTransactions(filtered);
+    setCurrentPage(1); // Reset pagination when filters are applied
   };
 
   const clearFilters = () => {
@@ -96,6 +101,28 @@ const Transactions = () => {
     setStartDate("");
     setEndDate("");
     setFilteredTransactions(transactions);
+    setCurrentPage(1); // Reset pagination when filters are cleared
+  };
+
+  // Download filtered transactions as CSV
+  const downloadCSV = () => {
+    const header = "Name,Amount,Type,Category,Date\n";
+    const csvRows = filteredTransactions.map((txn) => {
+      // Format date using localeDateString for readability
+      const dateStr = new Date(txn.date).toLocaleDateString();
+      return `${txn.name},${txn.amount},${txn.type},${txn.category},${dateStr}`;
+    });
+    const csvString = header + csvRows.join("\n");
+
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("hidden", "");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "transactions.csv");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Open Delete Confirmation Modal
@@ -188,6 +215,12 @@ const Transactions = () => {
   const totalAmount = filteredTransactions.reduce(
     (acc, txn) => acc + Number(txn.amount),
     0
+  );
+
+  // Pagination: Only show a subset of filtered transactions
+  const paginatedTransactions = filteredTransactions.slice(
+    0,
+    currentPage * itemsPerPage
   );
 
   return (
@@ -292,6 +325,18 @@ const Transactions = () => {
           >
             Clear Filters
           </button>
+          {/* Download CSV Button */}
+          <button
+            className="btn ms-2"
+            style={{
+              backgroundColor: "#116a7b",
+              borderColor: "#116a7b",
+              color: "#ece5c7",
+            }}
+            onClick={downloadCSV}
+          >
+            Download CSV
+          </button>
         </div>
         <div className="mb-2">
           <Link
@@ -332,8 +377,8 @@ const Transactions = () => {
             </tr>
           </thead>
           <tbody style={{ backgroundColor: "#ece5c7", color: "#116a7b" }}>
-            {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((txn) => (
+            {paginatedTransactions.length > 0 ? (
+              paginatedTransactions.map((txn) => (
                 <tr key={txn.id}>
                   <td>{txn.name}</td>
                   <td>${txn.amount}</td>
@@ -392,6 +437,17 @@ const Transactions = () => {
           )}
         </table>
       </div>
+      {/* Show More Button for Pagination */}
+      {filteredTransactions.length > paginatedTransactions.length && (
+        <div className="text-center my-3">
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+          >
+            Show More
+          </button>
+        </div>
+      )}
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalIsOpen}
