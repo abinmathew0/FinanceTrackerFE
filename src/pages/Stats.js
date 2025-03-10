@@ -112,6 +112,37 @@ const Stats = () => {
     .filter((item) => Number(item.spending) > 0)
     .sort((a, b) => Number(b.percentage) - Number(a.percentage));
 
+  // New: Compute average monthly spending for each expense category from all transactions (past 4-5 months data)
+  const averageMonthlySpendingByCategory = {};
+  const monthlyData = {};
+  transactions.forEach((txn) => {
+    if (txn.type === "expense") {
+      const category = txn.category;
+      const d = new Date(txn.date);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      if (!monthlyData[category]) {
+        monthlyData[category] = {};
+      }
+      if (!monthlyData[category][key]) {
+        monthlyData[category][key] = 0;
+      }
+      monthlyData[category][key] += Number(txn.amount);
+    }
+  });
+  Object.keys(monthlyData).forEach((category) => {
+    const months = Object.values(monthlyData[category]);
+    if (months.length > 0) {
+      const sum = months.reduce((a, b) => a + b, 0);
+      averageMonthlySpendingByCategory[category] = sum / months.length;
+    } else {
+      averageMonthlySpendingByCategory[category] = 0;
+    }
+  });
+  const totalAvgMonthly = expenseCategories.reduce((sum, cat) => {
+    return sum + (averageMonthlySpendingByCategory[cat.value] || 0);
+  }, 0);
+
+
   // Budget vs. Actual: Check which categories are over their set limits
   const categoriesOverLimit = expenseCategories
     .filter((cat) => {
@@ -468,6 +499,7 @@ const Stats = () => {
                   )
                 </th>
                 <th>Status</th>
+                <th>Avg/Month</th>
               </tr>
             </thead>
             <tbody>
@@ -500,6 +532,9 @@ const Stats = () => {
                       ? "Above Average"
                       : "Within Limit"
                     : "No Limit Set";
+                // New: Calculate average monthly spending for this category from all transactions
+                const avgMonthly =
+                  averageMonthlySpendingByCategory[categoryName] || 0;
                 return (
                   <tr key={categoryName}>
                     <td>{categoryName}</td>
@@ -531,6 +566,7 @@ const Stats = () => {
                         <span>{status}</span>
                       )}
                     </td>
+                    <td>${avgMonthly.toFixed(2)}</td>
                   </tr>
                 );
               })}
@@ -540,6 +576,7 @@ const Stats = () => {
                 <th>${totalSpendingByCategory.toFixed(2)}</th>
                 <th>${totalLimitByCategory.toFixed(2)}</th>
                 <th></th>
+                <th>${totalAvgMonthly.toFixed(2)}</th>
               </tr>
             </tbody>
           </table>
