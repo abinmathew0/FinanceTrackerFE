@@ -395,7 +395,10 @@ const Stats = () => {
             <strong>Total Expense:</strong> ${totalExpense.toFixed(2)}
           </div>
           <div className="col-md-4">
-            <strong>Net Income:</strong> ${netIncome.toFixed(2)}
+            <strong>Net Income:</strong>{" "}
+            <span className={netIncome < 0 ? "text-danger" : "text-success"}>
+              ${netIncome.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
