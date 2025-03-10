@@ -327,7 +327,7 @@ const Transactions = () => {
           </button>
           {/* Download CSV Button */}
           <button
-            className="btn ms-2"
+            className="btn ms-2 d-md-inline d-none"
             style={{
               backgroundColor: "#116a7b",
               borderColor: "#116a7b",
