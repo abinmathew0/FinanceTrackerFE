@@ -32,6 +32,12 @@ const Stats = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
+
+//Simulation Elements
+const [scenarioSavingsRate, setScenarioSavingsRate] = useState(20);
+const [simulationYears, setSimulationYears] = useState(10);
+const [simulationInterest, setSimulationInterest] = useState(8);
+
   // Load limits from backend on mount
   useEffect(() => {
     const fetchLimits = async () => {
@@ -351,6 +357,9 @@ const Stats = () => {
   for (let y = startYear; y <= currentDate.getFullYear() + 1; y++) {
     yearOptions.push(y);
   }
+
+  // Calculate recommended savings based on a 20% rule
+  const recommendedSavings = totalIncome * 0.2;
 
   return (
     <div className="container mt-4">
@@ -759,6 +768,126 @@ const Stats = () => {
             </li>
           ))}
         </ul>
+      </div>
+      {/* Savings Recommendation Card */}
+      <div
+        className="card p-4 shadow-sm mb-4"
+        style={{
+          backgroundColor: "#ece5c7",
+          color: "#116a7b",
+          borderRadius: "10px",
+        }}
+      >
+        <h4
+          className="mb-4 text-center"
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+          }}
+        >
+          Savings Recommendation
+        </h4>
+        <p className="text-center">
+          Rules for managing money such as <strong>80/20</strong>,{" "}
+          <strong>70/10/20</strong>, and <strong>50/30/20</strong> all recommend
+          investing at least 20% of your income.
+        </p>
+        <p className="text-center">
+          Based on your current total income of{" "}
+          <strong>${totalIncome.toFixed(2)}</strong>, you should aim to save at
+          least <strong>${recommendedSavings.toFixed(2)}</strong>.
+        </p>
+      </div>
+
+      {/* Scenario Simulation Card */}
+      <div
+        className="card p-4 shadow-sm mb-4"
+        style={{
+          backgroundColor: "#ece5c7",
+          color: "#116a7b",
+          borderRadius: "10px",
+        }}
+      >
+        <h4
+          className="mb-4 text-center"
+          style={{
+            borderBottom: "2px solid #cdc2ae",
+            paddingBottom: "0.5rem",
+            fontWeight: "bold",
+          }}
+        >
+          Savings Simulation
+        </h4>
+        <div className="row mb-3">
+          <div className="col-md-4">
+            <label className="form-label">Savings Rate (%)</label>
+            <input
+              type="range"
+              className="form-range"
+              min="0"
+              max="50"
+              value={scenarioSavingsRate}
+              onChange={(e) => setScenarioSavingsRate(Number(e.target.value))}
+            />
+            <div>
+              <small>{scenarioSavingsRate}%</small>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Years</label>
+            <input
+              type="range"
+              className="form-range"
+              min="1"
+              max="40"
+              value={simulationYears}
+              onChange={(e) => setSimulationYears(Number(e.target.value))}
+            />
+            <div>
+              <small>{simulationYears} years</small>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Annual Interest Rate (%)</label>
+            <input
+              type="range"
+              className="form-range"
+              min="0"
+              max="25"
+              value={simulationInterest}
+              onChange={(e) => setSimulationInterest(Number(e.target.value))}
+            />
+            <div>
+              <small>{simulationInterest}%</small>
+            </div>
+          </div>
+        </div>
+        {(() => {
+          // Assuming totalIncome is monthly income, compute yearly saving
+          const monthlySaving = totalIncome * (scenarioSavingsRate / 100);
+          const annualSaving = monthlySaving * 12;
+          const annualInterestRate = simulationInterest / 100;
+          const futureValue =
+            annualInterestRate > 0
+              ? annualSaving *
+                ((Math.pow(1 + annualInterestRate, simulationYears) - 1) /
+                  annualInterestRate)
+              : annualSaving * simulationYears;
+          return (
+            <>
+              <p className="text-center">
+                If you invest {scenarioSavingsRate}% of your income, you'll invest{" "}
+                <strong>${monthlySaving.toFixed(2)}</strong> per month.
+              </p>
+              <p className="text-center">
+                With an annual interest rate of {simulationInterest}% compounded
+                annually, in {simulationYears} years you could accumulate
+                approximately <strong>${futureValue.toFixed(2)}</strong>.
+              </p>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
