@@ -140,6 +140,20 @@ const Navbar = () => {
                 >
                   Stats
                 </Link>
+                {/* Add Automatic Updater Link */}
+                <Link
+                  className="btn me-lg-3 mb-2 mb-lg-0"
+                  to="/automatic-updater"
+                  style={{
+                    backgroundColor: "#ffcc66", // Example color - you can choose another
+                    color: "#116a7b",
+                    border: "none",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "5px",
+                  }}
+                >
+                  Stats
+                </Link>
                 {/* User Dropdown */}
                 <div className="dropdown navbar-user-dropdown">
                   <span

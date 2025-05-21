@@ -9,6 +9,8 @@ import AddTransaction from "./pages/AddTransaction";
 import Dashboard from "./pages/Dashboard";
 import Stats from "./pages/Stats";
 // Import the ChangePassword component
+import AutomaticUpdater from "./pages/AutomaticUpdater";
+// Import the AutomaticUpdater component
 import ChangePassword from "./pages/ChangePassword";
 
 const isAuthenticated = () => !!localStorage.getItem("token");
@@ -45,6 +47,10 @@ const App = () => {
           <Route
             path="/change-password"
             element={<ProtectedRoute element={<ChangePassword />} />}
+          />
+ <Route
+            path="/automatic-updater"
+            element={<ProtectedRoute element={<AutomaticUpdater />} />}
           />
         </Routes>
       </div>
